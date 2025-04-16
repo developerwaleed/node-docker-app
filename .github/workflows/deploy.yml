@@ -3,7 +3,7 @@ name: Deploy to EC2
 on:
   push:
     branches:
-      - master
+      - master  # or your default branch name
 
 jobs:
   deploy:
@@ -17,13 +17,27 @@ jobs:
           username: ubuntu
           key: ${{ secrets.EC2_PEM_KEY }}
           script: |
+            # Navigate to your project directory
             cd ~/test_app/node-docker-app
             
+            # Pull latest changes
             git pull
             
+            # Stop and remove ALL containers (in case any are stuck)
+            docker stop $(docker ps -a -q) || true
+            docker rm $(docker ps -a -q) || true
+            
+            # Remove old images to free up space
+            docker system prune -f
+            
+            # Build new image
             docker build -t node-hello-world .
             
-            docker stop node-app || true
-            docker rm node-app || true
+            # Make sure port 3000 is free
+            sudo lsof -t -i:3000 | xargs -r sudo kill -9 || true
             
-            docker run -d --name node-app -p 3000:3000 node-hello-world
+            # Run new container with restart policy
+            docker run -d --name node-app --restart unless-stopped -p 3000:3000 node-hello-world
+
+            # Verify the container is running
+            docker ps | grep node-app
