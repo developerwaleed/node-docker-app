@@ -6,6 +6,7 @@ A simple Node.js application containerized with Docker that displays "Hello Worl
 
 - Docker installed on your machine
 - Node.js and npm (for local development)
+- AWS EC2 instance (for public access)
 
 ## Building the Docker Image
 
@@ -21,18 +22,166 @@ docker run -p 3000:3000 node-hello-world
 
 ## Accessing the Application
 
+### Local Access
 Once the container is running, you can access the application at:
 - http://localhost:3000
 
-## Deploying to AWS
+### Public Access (EC2 Instance)
 
-To deploy this application to AWS, you can use services like:
-- AWS Elastic Container Service (ECS)
-- AWS Elastic Beanstalk
-- AWS App Runner
+1. **Fix Docker Permission Issues (if needed)**
+```bash
+# Add your user to the docker group
+sudo usermod -aG docker $USER
 
-Make sure to:
-1. Push your Docker image to Amazon ECR (Elastic Container Registry)
-2. Configure the appropriate AWS service to use your container image
-3. Set up proper security groups and networking
-4. Configure the environment variables if needed 
+# Apply the new group membership
+newgrp docker
+```
+
+2. **Clone and Setup the Application**
+```bash
+# Clone the repository
+git clone <your-repository-url>
+cd node-docker-app
+
+# Build the Docker image
+docker build -t node-hello-world .
+
+# Run the container in detached mode
+docker run -d -p 3000:3000 node-hello-world
+```
+
+3. **Verify Local Access**
+```bash
+# Check if the application is running locally
+curl localhost:3000
+```
+
+4. **Configure EC2 Security Group**
+- Go to AWS Management Console > EC2 > Security Groups
+- Select your instance's security group
+- Add inbound rule:
+  - Type: Custom TCP
+  - Port range: 3000
+  - Source: 0.0.0.0/0
+  - Description: Node.js app access
+
+5. **Access the Application**
+- Get your EC2 instance's public IP from AWS console
+- Access the application at: `http://<your-ec2-public-ip>:3000`
+
+### Troubleshooting
+
+1. **Check Running Containers**
+```bash
+# List running containers
+docker ps
+
+# Check port listening status
+sudo netstat -tulpn | grep 3000
+```
+
+2. **Restart Container**
+```bash
+# Stop all running containers
+docker stop $(docker ps -q)
+
+# Run container with explicit port mapping
+docker run -d -p 0.0.0.0:3000:3000 node-hello-world
+```
+
+3. **Check Firewall Status**
+```bash
+sudo ufw status
+```
+
+setup EC2:
+
+Sure! Here's a consolidated list of all the commands you need to run to install Docker, Git, and Node.js on your EC2 instance.
+
+### **Step-by-Step Commands**
+
+1. **Update package list:**
+   ```bash
+   sudo apt-get update
+   ```
+
+---
+
+### **Install Docker**
+
+2. **Install Docker dependencies:**
+   ```bash
+   sudo apt-get install apt-transport-https ca-certificates curl software-properties-common -y
+   ```
+
+3. **Add Docker's official GPG key:**
+   ```bash
+   curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+   ```
+
+4. **Add Docker repository:**
+   ```bash
+   sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+   ```
+
+5. **Update the package list again:**
+   ```bash
+   sudo apt-get update
+   ```
+
+6. **Install Docker:**
+   ```bash
+   sudo apt-get install docker-ce -y
+   ```
+
+7. **Start Docker and enable it to run on boot:**
+   ```bash
+   sudo systemctl start docker
+   sudo systemctl enable docker
+   ```
+
+8. **Verify Docker installation:**
+   ```bash
+   sudo docker --version
+   ```
+
+9. **(Optional) Add your user to the Docker group:**
+   ```bash
+   sudo usermod -aG docker $USER
+   ```
+
+---
+
+### **Install Git**
+
+10. **Install Git:**
+    ```bash
+    sudo apt-get install git -y
+    ```
+
+11. **Verify Git installation:**
+    ```bash
+    git --version
+    ```
+
+---
+
+### **Install Node.js**
+
+12. **Install Node.js from NodeSource repository:**
+    ```bash
+    curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
+    ```
+
+13. **Install Node.js and npm:**
+    ```bash
+    sudo apt-get install -y nodejs
+    ```
+
+14. **Verify Node.js and npm installation:**
+    ```bash
+    node --version
+    npm --version
+    ```
+
+---
