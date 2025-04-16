@@ -185,3 +185,39 @@ Sure! Here's a consolidated list of all the commands you need to run to install 
     ```
 
 ---
+
+## Continuous Deployment
+
+This project uses GitHub Actions for continuous deployment to EC2. When changes are pushed to the main branch, the following automated process occurs:
+
+1. GitHub Actions connects to your EC2 instance at `ec2-51-20-81-225.eu-north-1.compute.amazonaws.com`
+2. Pulls the latest code from the repository
+3. Rebuilds and restarts the Docker container
+
+### Required Secrets
+
+You need to add your EC2 .pem key as a secret in your GitHub repository:
+
+1. Go to your GitHub repository
+2. Click on "Settings"
+3. Click on "Secrets and variables" → "Actions"
+4. Click "New repository secret"
+5. Name: `EC2_PEM_KEY`
+6. Value: Copy the entire contents of your `test_instance.pem` file
+
+### Manual Deployment
+
+If you need to manually deploy the application, use these commands:
+
+```bash
+# SSH into your EC2 instance
+ssh -i "test_instance.pem" ubuntu@ec2-51-20-81-225.eu-north-1.compute.amazonaws.com
+
+# Once connected, run these commands
+cd ~/test_app/node-docker-app
+git pull
+docker build -t node-hello-world .
+docker stop node-app || true
+docker rm node-app || true
+docker run -d --name node-app -p 3000:3000 node-hello-world
+```

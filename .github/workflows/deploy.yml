@@ -1,0 +1,29 @@
+name: Deploy to EC2
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@master
+        with:
+          host: ec2-51-20-81-225.eu-north-1.compute.amazonaws.com
+          username: ubuntu
+          key: ${{ secrets.EC2_PEM_KEY }}
+          script: |
+            cd ~/test_app/node-docker-app
+            
+            git pull
+            
+            docker build -t node-hello-world .
+            
+            docker stop node-app || true
+            docker rm node-app || true
+            
+            docker run -d --name node-app -p 3000:3000 node-hello-world
