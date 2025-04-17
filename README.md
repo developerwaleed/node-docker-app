@@ -200,7 +200,7 @@ You need to add your EC2 .pem key as a secret in your GitHub repository:
 
 1. Go to your GitHub repository
 2. Click on "Settings"
-3. Click on "Secrets and variables" → "Actions"
+3.  Click on "Secrets and variables" → "Actions"
 4. Click "New repository secret"
 5. Name: `EC2_PEM_KEY`
 6. Value: Copy the entire contents of your `test_instance.pem` file
